@@ -18,12 +18,36 @@ class ProblemResponse(ProblemBase):
     class Config:
         from_attributes = True
 
-class CompetitionCreate(BaseModel):
+class CompetitionBase(BaseModel):
     name: str
     country: Optional[str] = None
     url: Optional[str] = None
 
-class CompetitionResponse(CompetitionCreate):
+class CompetitionCreate(CompetitionBase):
+    pass
+
+class CompetitionResponse(CompetitionBase):
     id: int
+
     class Config:
         from_attributes = True
+
+class SolutionBase(BaseModel):
+    content: str
+    author: Optional[str] = None
+
+class SolutionCreate(SolutionBase):
+    problem_id: int
+
+class SolutionResponse(SolutionBase):
+    id: int
+    problem_id: int
+
+    class Config:
+        from_attributes = True
+
+class ProblemWithSolutions(ProblemResponse):
+    solutions: List[SolutionResponse] = []
+
+class CompetitionWithProblems(CompetitionResponse):
+    problems: List[ProblemResponse] = []
