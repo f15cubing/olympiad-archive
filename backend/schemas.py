@@ -1,6 +1,18 @@
 from pydantic import BaseModel
 from typing import List, Optional
 
+class TagBase(BaseModel):
+    name: str
+
+class TagCreate(TagBase):
+    pass
+
+class TagResponse(TagBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
 class ProblemBase(BaseModel):
     year: int
     problem_number: int
@@ -10,10 +22,12 @@ class ProblemBase(BaseModel):
 
 class ProblemCreate(ProblemBase):
     competition_id: int
+    tag_ids: Optional[List[int]] = []
 
 class ProblemResponse(ProblemBase):
     id: int
     competition_id: int
+    tags: List[TagResponse] = []
 
     class Config:
         from_attributes = True

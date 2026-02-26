@@ -4,10 +4,10 @@ from models import Base
 from fastapi import FastAPI
 from database import engine
 from models import Base
-from routers import problems, competitions
+from routers import problems, competitions, solutions, tags
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = FastAPI(title="Olympiad Archive API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -24,6 +24,8 @@ async def startup():
 
 app.include_router(problems.router)
 app.include_router(competitions.router)
+app.include_router(solutions.router)
+app.include_router(tags.router)
 
 @app.get("/")
 def read_root():
