@@ -1,7 +1,14 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey, TIMESTAMP, func
+from sqlalchemy import Column, Integer, Text, ForeignKey, TIMESTAMP, func, Table
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
+
+problem_tags = Table(
+    "problem_tags",
+    Base.metadata,
+    Column("problem_id", Integer, ForeignKey("problems.id", ondelete="CASCADE"), primary_key=True),
+    Column("tag_id", Integer, ForeignKey("tags.id", ondelete="CASCADE"), primary_key=True),
+)
 
 class Competition(Base):
     __tablename__ = "competitions"
@@ -24,6 +31,7 @@ class Problem(Base):
 
     competition = relationship("Competition", back_populates="problems")
     solutions = relationship("Solution", back_populates="problem", cascade="all, delete")
+    tags = relationship("Tag", secondary=problem_tags, back_populates="problems")
 
 class Solution(Base):
     __tablename__ = "solutions"
@@ -34,3 +42,10 @@ class Solution(Base):
     created_at = Column(TIMESTAMP, server_default=func.now())
 
     problem = relationship("Problem", back_populates="solutions")
+
+class Tag(Base):
+    __tablename__ = "tags"
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(Text, nullable=False, unique=True)
+
+    problems = relationship("Problem", secondary=problem_tags, back_populates="tags")
