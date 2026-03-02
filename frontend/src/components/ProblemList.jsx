@@ -5,21 +5,70 @@ import 'katex/dist/katex.min.css';
 import { useParams, Link } from 'react-router-dom'; // Combined imports
 
 export default function ProblemList() {
+  const isAdmin = true; // TODO: Replace with real auth system later
+
   const { compId, year } = useParams();
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [formData, setFormData] = useState({
+    problem_number: '',
+    year: year ? parseInt(year) : '',
+    statement: '',
+    author: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     axios.get('http://localhost:8000/problems/')
       .then(res => {
         const filtered = res.data.filter(p =>
-            p.competition_id === parseInt(compId) && p.year === parseInt(year)
+            parseInt(p.competition_id) === parseInt(compId) && parseInt(p.year) === parseInt(year)
         );
         setProblems(filtered);
       })
       .catch(err => console.error(err))
       .finally(() => setLoading(false));
   }, [compId, year]);
+
+  const handleAddProblem = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const payload = {
+        problem_number: parseInt(formData.problem_number),
+        year: parseInt(formData.year),
+        statement: formData.statement,
+        author: formData.author || null,
+        competition_id: parseInt(compId)
+      };
+      const res = await axios.post('http://localhost:8000/problems/', payload);
+      setProblems([...problems, res.data]);
+      setFormData({
+        problem_number: '',
+        year: year ? parseInt(year) : '',
+        statement: '',
+        author: ''
+      });
+      setShowForm(false);
+    } catch (err) {
+      console.error("Error adding problem:", err);
+      alert('Failed to add problem');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteProblem = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this problem?')) return;
+    try {
+      await axios.delete(`http://localhost:8000/problems/${id}/`);
+      setProblems(problems.filter(p => p.id !== id));
+    } catch (err) {
+      console.error("Error deleting problem:", err);
+      alert('Failed to delete problem');
+    }
+  };
 
   const renderStatement = (text) => {
     return text.split(/(\$.*?\$)/g).map((part, index) => {
@@ -37,18 +86,129 @@ export default function ProblemList() {
       <Link to={`/competition/${compId}`} className="text-blue-600 hover:underline mb-6 inline-block">
         ← Back to Years
       </Link>
-      <h1 className="text-3xl font-bold mb-8 text-slate-800">Problems</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-slate-800">Problems</h1>
+        {isAdmin && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+          >
+            + Add Problem
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <div className="mb-6 p-6 bg-slate-50 border border-slate-200 rounded-xl">
+          <h2 className="text-xl font-semibold mb-4 text-slate-800">Add New Problem</h2>
+          <form onSubmit={handleAddProblem} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="prob-number" className="block text-sm font-medium text-slate-700 mb-1">
+                  Problem Number *
+                </label>
+                <input
+                  id="prob-number"
+                  type="number"
+                  required
+                  value={formData.problem_number}
+                  onChange={(e) => setFormData({ ...formData, problem_number: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="1"
+                />
+              </div>
+              <div>
+                <label htmlFor="prob-year" className="block text-sm font-medium text-slate-700 mb-1">
+                  Year *
+                </label>
+                <input
+                  id="prob-year"
+                  type="number"
+                  required
+                  value={formData.year}
+                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="2023"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="prob-statement" className="block text-sm font-medium text-slate-700 mb-1">
+                Problem Statement *
+              </label>
+              <textarea
+                id="prob-statement"
+                required
+                value={formData.statement}
+                onChange={(e) => setFormData({ ...formData, statement: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Problem statement (supports LaTeX in $ delimiters)"
+                rows="6"
+              />
+            </div>
+            <div>
+              <label htmlFor="prob-author" className="block text-sm font-medium text-slate-700 mb-1">
+                Problem Author
+              </label>
+              <input
+                id="prob-author"
+                type="text"
+                value={formData.author}
+                onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Author name (optional)"
+              />
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                type="submit"
+                disabled={submitting}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                {submitting ? 'Saving...' : 'Save Problem'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForm(false);
+                  setFormData({
+                    problem_number: '',
+                    year: year ? parseInt(year) : '',
+                    statement: '',
+                    author: ''
+                  });
+                }}
+                className="bg-slate-300 hover:bg-slate-400 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="space-y-4">
         {problems.map(p => (
-          <Link key={p.id} to={`/problem/${p.id}`} className="block p-6 bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-300 transition-colors">
-            <div className="flex justify-between text-sm font-medium text-blue-600 mb-2">
-              <span>Problem {p.problem_number}</span>
-              <span className="text-slate-400">{p.year}</span>
-            </div>
-            <div className="text-slate-700 leading-relaxed">
-              {renderStatement(p.statement)}
-            </div>
-          </Link>
+          <div key={p.id} className="p-6 bg-white rounded-xl shadow-sm border border-slate-200 hover:border-blue-300 transition-colors">
+            <Link to={`/problem/${p.id}`} className="block group">
+              <div className="flex justify-between text-sm font-medium text-blue-600 mb-2">
+                <span>Problem {p.problem_number}</span>
+                <span className="text-slate-400">{p.year}</span>
+              </div>
+              {p.author && <p className="text-xs text-slate-500 mb-2">Author: {p.author}</p>}
+              <div className="text-slate-700 leading-relaxed group-hover:text-blue-600">
+                {renderStatement(p.statement)}
+              </div>
+            </Link>
+            {isAdmin && (
+              <button
+                onClick={() => handleDeleteProblem(p.id)}
+                className="mt-4 text-sm bg-red-100 hover:bg-red-200 text-red-700 font-medium py-1 px-3 rounded transition-colors"
+              >
+                Delete
+              </button>
+            )}
+          </div>
         ))}
         {problems.length === 0 && (
           <p className="text-slate-500 italic">No problems found for this selection.</p>

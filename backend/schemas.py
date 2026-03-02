@@ -15,6 +15,7 @@ class ProblemBase(BaseModel):
     year: int
     problem_number: int
     statement: str
+    author: Optional[str] = None
     difficulty: Optional[int] = None
     source_url: Optional[str] = None
 
