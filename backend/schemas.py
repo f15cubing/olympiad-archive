@@ -25,7 +25,7 @@ class ProblemCreate(ProblemBase):
 
 class ProblemResponse(ProblemBase):
     id: int
-    competition_id: int
+    competition_id: Optional[int] = None
     tags: List[TagResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
