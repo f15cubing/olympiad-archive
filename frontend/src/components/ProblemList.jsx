@@ -7,6 +7,7 @@ import { useParams, Link } from 'react-router-dom'; // Combined imports
 export default function ProblemList() {
   const { compId, year } = useParams();
   const [problems, setProblems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     axios.get('http://localhost:8000/problems/')
@@ -16,7 +17,8 @@ export default function ProblemList() {
         );
         setProblems(filtered);
       })
-      .catch(err => console.error(err));
+      .catch(err => console.error(err))
+      .finally(() => setLoading(false));
   }, [compId, year]);
 
   const renderStatement = (text) => {
@@ -27,6 +29,8 @@ export default function ProblemList() {
       return <span key={index}>{part}</span>;
     });
   };
+
+  if (loading) return <p>Loading problems...</p>;
 
   return (
     <div className="max-w-4xl mx-auto p-6">

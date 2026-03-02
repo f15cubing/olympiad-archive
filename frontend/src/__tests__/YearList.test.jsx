@@ -1,17 +1,34 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import YearList from '../components/YearList'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { rest } from 'msw'
+import { setupServer } from 'msw/node'
 
-// YearList is a simple component that shows years for a competition; we can
-// render it with sample props instead of network mocking.
+const server = setupServer(
+  rest.get('http://localhost:8000/competitions/', (req, res, ctx) =>
+    res(ctx.json([{ id: 5, name: 'AMC' }]))
+  ),
+  rest.get('http://localhost:8000/problems/', (req, res, ctx) =>
+    res(ctx.json([
+      { id: 1, competition_id: 5, year: 2020 },
+      { id: 2, competition_id: 5, year: 2022 },
+    ]))
+  )
+)
+
+beforeAll(() => server.listen())
+afterEach(() => server.resetHandlers())
+afterAll(() => server.close())
 
 test('renders years list', async () => {
   render(
-    <MemoryRouter>
-      <YearList years={[2020, 2021, 2022]} compId={5} />
+    <MemoryRouter initialEntries={['/competition/5']}>
+      <Routes>
+        <Route path="/competition/:compId" element={<YearList />} />
+      </Routes>
     </MemoryRouter>
   )
 
-  expect(screen.getByText(/2020/)).toBeInTheDocument()
+  await waitFor(() => expect(screen.getByText(/2020/)).toBeInTheDocument())
   expect(screen.getByText(/2022/)).toBeInTheDocument()
 })
