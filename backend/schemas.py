@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 
 class TagBase(BaseModel):
@@ -9,9 +9,7 @@ class TagCreate(TagBase):
 
 class TagResponse(TagBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ProblemBase(BaseModel):
     year: int
@@ -28,9 +26,7 @@ class ProblemResponse(ProblemBase):
     id: int
     competition_id: int
     tags: List[TagResponse] = []
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CompetitionBase(BaseModel):
     name: str
@@ -42,9 +38,7 @@ class CompetitionCreate(CompetitionBase):
 
 class CompetitionResponse(CompetitionBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class SolutionBase(BaseModel):
     content: str
@@ -56,9 +50,7 @@ class SolutionCreate(SolutionBase):
 class SolutionResponse(SolutionBase):
     id: int
     problem_id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ProblemWithSolutions(ProblemResponse):
     solutions: List[SolutionResponse] = []
