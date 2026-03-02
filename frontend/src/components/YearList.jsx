@@ -27,7 +27,7 @@ export default function YearList() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Link to="/" className="text-blue-600 hover:underline mb-6 inline-block">← All Competitions</Link>
-      <h1 className="text-3xl font-bold mb-8 text-slate-800">{compName}: Select Year</h1>
+      <h1 className="text-3xl font-bold mb-8 text-slate-800">{compName}</h1>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {years.map(year => (
           <Link key={year} to={`/competition/${compId}/${year}`}
