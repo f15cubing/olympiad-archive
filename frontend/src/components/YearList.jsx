@@ -60,59 +60,7 @@ export default function YearList() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <Link to="/" className="text-blue-600 hover:underline mb-6 inline-block">← All Competitions</Link>
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">{compName}</h1>
-        {isAdmin && (
-          <button
-            onClick={() => setShowYearForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            + Add Year
-          </button>
-        )}
-      </div>
-
-      {showYearForm && (
-        <div className="mb-6 p-6 bg-slate-50 border border-slate-200 rounded-xl">
-          <h2 className="text-lg font-semibold mb-4 text-slate-800">Add New Year</h2>
-          <form onSubmit={handleAddYear} className="space-y-4">
-            <div>
-              <label htmlFor="year-input" className="block text-sm font-medium text-slate-700 mb-1">
-                Year *
-              </label>
-              <input
-                id="year-input"
-                type="number"
-                required
-                value={newYear}
-                onChange={(e) => setNewYear(parseInt(e.target.value))}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={new Date().getFullYear()}
-              />
-              <p className="text-xs text-slate-500 mt-1">You'll be taken to add problems for this year</p>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button
-                type="submit"
-                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                Continue to Add Problems
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setShowYearForm(false);
-                  setNewYear(new Date().getFullYear());
-                }}
-                className="bg-slate-300 hover:bg-slate-400 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
+      <h1 className="text-3xl font-bold mb-8 text-slate-800">{compName}</h1>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {years.map(year => (
           <div key={year} className="relative group">
