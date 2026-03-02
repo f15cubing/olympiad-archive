@@ -29,9 +29,9 @@ class Problem(Base):
     source_url = Column(Text)
     created_at = Column(TIMESTAMP, server_default=func.now())
 
-    competition = relationship("Competition", back_populates="problems")
-    solutions = relationship("Solution", back_populates="problem", cascade="all, delete")
-    tags = relationship("Tag", secondary=problem_tags, back_populates="problems")
+    competition = relationship("Competition", back_populates="problems", lazy="selectin")
+    solutions = relationship("Solution", back_populates="problem", cascade="all, delete", lazy="selectin")
+    tags = relationship("Tag", secondary=problem_tags, back_populates="problems", lazy="selectin")
 
 class Solution(Base):
     __tablename__ = "solutions"
