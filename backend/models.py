@@ -25,6 +25,7 @@ class Problem(Base):
     year = Column(Integer, nullable=False)
     problem_number = Column(Integer, nullable=False)
     statement = Column(Text, nullable=False) # LaTeX source [cite: 82]
+    author = Column(Text, nullable=True) # Problem author (optional)
     difficulty = Column(Integer) # 1-10 [cite: 83]
     source_url = Column(Text)
     created_at = Column(TIMESTAMP, server_default=func.now())

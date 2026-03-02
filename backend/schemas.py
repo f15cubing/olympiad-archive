@@ -15,6 +15,7 @@ class ProblemBase(BaseModel):
     year: int
     problem_number: int
     statement: str
+    author: Optional[str] = None
     difficulty: Optional[int] = None
     source_url: Optional[str] = None
 
@@ -24,7 +25,7 @@ class ProblemCreate(ProblemBase):
 
 class ProblemResponse(ProblemBase):
     id: int
-    competition_id: int
+    competition_id: Optional[int] = None
     tags: List[TagResponse] = []
     model_config = ConfigDict(from_attributes=True)
 

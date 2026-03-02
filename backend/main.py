@@ -12,7 +12,7 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(Base.metadata.create_all)
     yield
 
-app = FastAPI(title="Olympiad Archive API")
+app = FastAPI(title="Olympiad Archive API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

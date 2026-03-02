@@ -38,6 +38,7 @@ async def create_problem(problem: schemas.ProblemCreate, db: AsyncSession = Depe
         year=problem.year,
         problem_number=problem.problem_number,
         statement=problem.statement,
+        author=problem.author,
         difficulty=problem.difficulty,
         source_url=problem.source_url
     )
