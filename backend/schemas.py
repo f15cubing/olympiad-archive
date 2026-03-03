@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
+from datetime import datetime
 
 class TagBase(BaseModel):
     name: str
@@ -23,9 +24,19 @@ class ProblemCreate(ProblemBase):
     competition_id: int
     tag_ids: Optional[List[int]] = []
 
+class ProblemUpdate(BaseModel):
+    year: Optional[int] = None
+    problem_number: Optional[int] = None
+    statement: Optional[str] = None
+    author: Optional[str] = None
+    difficulty: Optional[int] = None
+    source_url: Optional[str] = None
+    tag_ids: Optional[List[int]] = None
+
 class ProblemResponse(ProblemBase):
     id: int
     competition_id: Optional[int] = None
+    created_at: Optional[datetime] = None
     tags: List[TagResponse] = []
     model_config = ConfigDict(from_attributes=True)
 
@@ -33,9 +44,16 @@ class CompetitionBase(BaseModel):
     name: str
     country: Optional[str] = None
     url: Optional[str] = None
+    description: Optional[str] = None
 
 class CompetitionCreate(CompetitionBase):
     pass
+
+class CompetitionUpdate(BaseModel):
+    name: Optional[str] = None
+    country: Optional[str] = None
+    url: Optional[str] = None
+    description: Optional[str] = None
 
 class CompetitionResponse(CompetitionBase):
     id: int
@@ -58,3 +76,5 @@ class ProblemWithSolutions(ProblemResponse):
 
 class CompetitionWithProblems(CompetitionResponse):
     problems: List[ProblemResponse] = []
+
+ProblemWithSolutions.model_rebuild()
