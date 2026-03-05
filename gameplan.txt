@@ -1,0 +1,90 @@
+Overview
+You'll call a free AI API in a script that reads each problem/solution, generates structured tags,
+and writes them back to your database.
+
+Free API Options
+Gemini (recommended for this use case)
+● Gemini 2.0 Flash is free via Google AI Studio with generous limits (1,500 req/day, 1M
+tokens/min)
+● No credit card required, just a Google account
+● Get your key at: aistudio.google.com
+
+Step-by-Step Plan
+Step 1 — Define your tag taxonomy first. Decide what tags you actually want before touching
+any code. For olympiad problems, you likely want categories like: subject (Algebra, Geometry,
+Number Theory, Combinatorics), techniques (induction, pigeonhole, modular arithmetic,
+construction, etc.), and topic keywords.
+Step 2 — Design your prompt. Write a system prompt that tells Gemini your exact taxonomy
+and asks it to return JSON only.
+Step 3 — Write the tagging script.
+Step 4 — Connect to your database. Use whatever DB you have — if it's SQLite/Postgres add
+a tags JSONB column and UPDATE each row.
+
+Key Tips
+● Store raw tags as JSON in one column — easier to iterate on schema later
+● Keep a tagged_at timestamp so you can re-tag selectively if you improve your prompt
+● Batch carefully — at 1,500 req/day free limit, a 10k problem DB takes ~7 days; you can
+parallelize slightly but watch rate limits
+Based on your current tagging game plan, your system has a solid foundation for
+automation, but it is missing several critical production-level components common in
+robust AI data pipelines.
+
+1. Quality Assurance (QA) & Evaluation
+Your plan assumes the AI's first guess is correct, but LLMs often struggle with mathematical
+reasoning and can produce "hallucinations" or logical errors.
+● Human-in-the-loop (HITL): You are missing a mechanism for human experts to review
+and correct labels, especially for complex or "low confidence" problems.
+● Gold Standard Sets: You lack a "gold set"—a small, manually verified dataset used to
+calibrate the model's accuracy and ensure that prompt changes actually improve results.
+● Self-Assessment: You could implement a "generator-critic" setup where a second LLM
+call critiques the first one's tags for accuracy.
+2. Advanced Prompting Techniques
+The current prompt is direct, but math olympiad problems often require deeper reasoning for
+accurate categorization.
+● Chain-of-Thought (CoT): Instead of asking for JSON only, you should ask the model to
+first explain its reasoning for each tag choice before providing the JSON.
+● Few-Shot Examples: Adding 3–5 examples of difficult problems and their "perfect" tags
+into the system prompt can significantly reduce errors.
+3. Error Handling & Monitoring
+The Python script is a simple loop, which makes it vulnerable to external failures.
+● Retry Logic: You need specific handling for 429 (Rate Limit) and 5xx (Server Error)
+status codes to ensure the script doesn't crash mid-database update.
+● Schema Validation: You should use a library like Pydantic to validate that the JSON
+returned by the AI actually matches your required schema before writing it to the
+database.
+● Observability: Tracking metrics like cost per problem, token usage, and latency will
+help you manage your API budget and performance as you scale.
+4. Database Integrity
+● Version Control for Tags: If you update your prompt or taxonomy in the future, you
+need a way to track which problems were tagged with which version of the prompt.
+● Confidence Scores: Asking the AI to provide a confidence integer (1–10) for its tags
+allows you to automatically flag uncertain rows for human review.
+
+PROMPT:
+Role: You are an expert Math Olympiad classifier and pedagogical researcher
+Analyze the provided math problem and solution to generate accurate metadata for a
+competition database
+Taxonomy Guidelines:
+Field: Must be exactly one of: [Algebra, Geometry, Number Theory, Combinatorics]
+Difficulty: Scale of 1–10 (1 = Introductory AMC, 10 = IMO Shortlist/Hard Problem 6).
+Techniques: Choose from [induction, contradiction, pigeonhole, modular arithmetic, Vieta's
+formulas, barycentric coordinates, etc.], or another technique.
+Topics: 2–7 specific keywords (e.g., "cyclic quadrilaterals", "functional equations").
+
+Process:
+Step 1: Briefly analyze the problem’s core logical requirements.
+Step 2: Identify the main branch of mathematics (Field).
+Step 3: List specific theorems or strategies used in the solution(s) (Techniques)+(Topics).
+Step 4: Finalize the structured JSON.
+Output Format:
+Return your response in the following JSON structure ONLY. Ensure confidence_score is an
+integer from 1–10 based on how certain you are of the classification.
+
+{
+"analysis": "Brief 1-2 sentence reasoning for the chosen tags",
+"field": "String",
+"difficulty": Integer,
+"techniques": ["String"],
+"topics": ["String"],
+"confidence_score": Integer
+}

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey, TIMESTAMP, func, Table
+from sqlalchemy import Column, Integer, Text, ForeignKey, TIMESTAMP, func, Table, JSON
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
@@ -29,6 +29,10 @@ class Problem(Base):
     difficulty = Column(Integer) # 1-10 [cite: 83]
     source_url = Column(Text)
     created_at = Column(TIMESTAMP, server_default=func.now())
+    
+    # AI-generated metadata (from Gemini)
+    metadata = Column(JSON, nullable=True)  # Stores complete AI response: {field, difficulty, techniques, topics, analysis, confidence_score}
+    tagged_at = Column(TIMESTAMP, nullable=True)  # Timestamp of when AI tagging was performed
 
     competition = relationship("Competition", back_populates="problems", lazy="selectin")
     solutions = relationship("Solution", back_populates="problem", cascade="all, delete", lazy="selectin")
