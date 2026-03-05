@@ -18,6 +18,7 @@ export default function ProblemDetail() {
   });
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     // Fetch problem and all available tags
@@ -94,6 +95,22 @@ export default function ProblemDetail() {
     }
   };
 
+  const handleAutoTag = async () => {
+    if (!window.confirm('Generate tags using AI? This may incur an API request.')) return;
+    setAiLoading(true);
+    try {
+      const res = await axios.post(`http://localhost:8000/problems/${id}/auto-tag`);
+      setProblem(res.data);
+      // sync selection state for editing form
+      setSelectedTagIds(res.data.tags?.map(t => t.id) || []);
+    } catch (err) {
+      console.error('AI tagging failed:', err);
+      alert('Auto-tagging failed');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   const handleTagToggle = (tagId) => {
     setSelectedTagIds(prev =>
       prev.includes(tagId)
@@ -146,15 +163,24 @@ export default function ProblemDetail() {
         </div>
 
         {isAdmin && (
-          <button
-            onClick={() => {
-              setShowTagForm(true);
-              setSelectedTagIds(problem.tags?.map(tag => tag.id) || []);
-            }}
-            className="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors mb-6"
-          >
-            {problem.tags?.length > 0 ? '✎ Edit Tags' : '+ Add Tags'}
-          </button>
+          <div className="flex gap-4 mb-6 items-center">
+            <button
+              onClick={() => {
+                setShowTagForm(true);
+                setSelectedTagIds(problem.tags?.map(tag => tag.id) || []);
+              }}
+              className="bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            >
+              {problem.tags?.length > 0 ? '✎ Edit Tags' : '+ Add Tags'}
+            </button>
+            <button
+              onClick={handleAutoTag}
+              disabled={aiLoading}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+            >
+              {aiLoading ? 'Tagging...' : 'Auto‑tag'}
+            </button>
+          </div>
         )}
 
         {/* Tag Edit Form */}
