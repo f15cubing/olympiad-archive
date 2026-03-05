@@ -16,6 +16,22 @@ async def get_problems(db: AsyncSession = Depends(get_db)):
     )
     return result.scalars().all()
 
+# put search endpoint before the dynamic problem_id route so that
+# "/search" doesnt get captured by the path parameter.
+@router.get("/search", response_model=List[schemas.ProblemResponse])
+async def search_problems(
+    q: str = None,
+    tag: str = None,
+    db: AsyncSession = Depends(get_db)
+):
+    query = select(models.Problem).options(selectinload(models.Problem.tags))
+    if q:
+        query = query.where(models.Problem.statement.ilike(f"%{q}%"))
+    if tag:
+        query = query.join(models.Problem.tags).where(models.Tag.name == tag)
+    result = await db.execute(query)
+    return result.scalars().unique().all()
+
 @router.get("/{problem_id}", response_model=schemas.ProblemWithSolutions)
 async def get_problem(problem_id: int, db: AsyncSession = Depends(get_db)):
     result = await db.execute(
@@ -97,3 +113,13 @@ async def delete_problem(problem_id: int, db: AsyncSession = Depends(get_db)):
     await db.delete(db_problem)
     await db.commit()
     return None
+
+@router.get("/tag/{tag_name}", response_model=List[schemas.ProblemResponse])
+async def get_problems_by_tag(tag_name: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(
+        select(models.Problem)
+        .join(models.Problem.tags)
+        .where(models.Tag.name == tag_name)
+        .options(selectinload(models.Problem.tags))
+    )
+    return result.scalars().unique().all()
