@@ -18,6 +18,9 @@ export default function ProblemList() {
     author: ''
   });
   const [submitting, setSubmitting] = useState(false);
+  const [allTags, setAllTags] = useState([]);
+  const [selectedTagIds, setSelectedTagIds] = useState([]);
+  const [newTagName, setNewTagName] = useState('');
 
   useEffect(() => {
     axios.get('http://localhost:8000/problems/')
@@ -31,6 +34,10 @@ export default function ProblemList() {
       .finally(() => setLoading(false));
   }, [compId, year]);
 
+  useEffect(() => {
+    axios.get('http://localhost:8000/tags/').then(res => setAllTags(res.data));
+  }, []);
+
   const handleAddProblem = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -40,7 +47,8 @@ export default function ProblemList() {
         year: parseInt(formData.year),
         statement: formData.statement,
         author: formData.author || null,
-        competition_id: parseInt(compId)
+        competition_id: parseInt(compId),
+        tag_ids: selectedTagIds
       };
       const res = await axios.post('http://localhost:8000/problems/', payload);
       setProblems([...problems, res.data]);
@@ -67,6 +75,19 @@ export default function ProblemList() {
     } catch (err) {
       console.error("Error deleting problem:", err);
       alert('Failed to delete problem');
+    }
+  };
+
+  const handleCreateTag = async () => {
+    if (!newTagName.trim()) return;
+    try {
+      const res = await axios.post('http://localhost:8000/tags/', { name: newTagName });
+      setAllTags([...allTags, res.data]);
+      setSelectedTagIds([...selectedTagIds, res.data.id]);
+      setNewTagName('');
+    } catch (err) {
+      console.error("Error creating tag:", err);
+      alert('Failed to create tag');
     }
   };
 
@@ -159,6 +180,45 @@ export default function ProblemList() {
                 placeholder="Author name (optional)"
               />
             </div>
+            <div>
+              <label htmlFor="prob-tags" className="block text-sm font-medium text-slate-700 mb-1">
+                Tags
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {allTags.map(tag => (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => setSelectedTagIds(prev =>
+                      prev.includes(tag.id) ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
+                    )}
+                    className={`px-3 py-1 rounded-full text-sm border transition-colors ${
+                      selectedTagIds.includes(tag.id)
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-slate-600 border-slate-300 hover:border-blue-400'
+                    }`}
+                  >
+                    {tag.name}
+                  </button>
+                ))}
+              </div>
+              <div className="mt-2 flex gap-2">
+                <input
+                  type="text"
+                  placeholder="New tag name"
+                  value={newTagName}
+                  onChange={(e) => setNewTagName(e.target.value)}
+                  className="flex-1 px-3 py-1 border border-slate-300 rounded text-sm"
+                />
+                <button
+                  type="button"
+                  onClick={handleCreateTag}
+                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm"
+                >
+                  Create Tag
+                </button>
+              </div>
+            </div>
             <div className="flex gap-2 pt-2">
               <button
                 type="submit"
@@ -177,6 +237,8 @@ export default function ProblemList() {
                     statement: '',
                     author: ''
                   });
+                  setSelectedTagIds([]);
+                  setNewTagName('');
                 }}
                 className="bg-slate-300 hover:bg-slate-400 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors"
               >
@@ -198,6 +260,13 @@ export default function ProblemList() {
               {p.author && <p className="text-xs text-slate-500 mb-2">Author: {p.author}</p>}
               <div className="text-slate-700 leading-relaxed group-hover:text-blue-600">
                 {renderStatement(p.statement)}
+              </div>
+              <div className="flex flex-wrap gap-2 mt-4">
+                {p.tags?.map(tag => (
+                  <span key={tag.id} className="bg-blue-100 text-blue-700 text-xs font-medium px-2 py-1 rounded-full">
+                    {tag.name}
+                  </span>
+                ))}
               </div>
             </Link>
             {isAdmin && (

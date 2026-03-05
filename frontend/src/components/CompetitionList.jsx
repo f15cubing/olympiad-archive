@@ -57,14 +57,17 @@ export default function CompetitionList() {
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-slate-800">Competitions</h1>
-        {isAdmin && (
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-          >
-            + Add Competition
-          </button>
-        )}
+        <div className="flex gap-4">
+          <Link to="/search" className="text-blue-600 hover:underline">Search Problems</Link>
+          {isAdmin && (
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              + Add Competition
+            </button>
+          )}
+        </div>
       </div>
 
       {showForm && (
