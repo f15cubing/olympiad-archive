@@ -25,6 +25,9 @@ A complete AI-powered automated tagging system for olympiad problems using Googl
 # 3. Copy the key
 ```
 
+Note: the code uses `google-genai` by default but will fall back to the
+deprecated `google-generativeai` if the new package isn't installed.
+```
 ### Step 2: Set Environment Variable
 
 **Option A: Create .env file**
@@ -32,6 +35,9 @@ A complete AI-powered automated tagging system for olympiad problems using Googl
 # Create file: .env (in project root)
 GEMINI_API_KEY=your_api_key_here
 ```
+
+*The Gemini client automatically calls `load_dotenv()` on import, so any
+variables placed in `.env` will be read automatically.*
 
 **Option B: Set system variable**
 ```powershell
@@ -45,16 +51,20 @@ $env:GEMINI_API_KEY="your_api_key_here"
 
 ### Step 3: Create Database Columns
 
-The system needs two new columns in the `problems` table. Run this:
+The system needs two new columns in the `problems` table and one new column on `competitions`. Run this:
 
 ```bash
-# SQLite migration
+# SQLite migration (if you prefer to alter in-place)
 sqlite3 olympiad.db "
-ALTER TABLE problems ADD COLUMN metadata JSON;
+ALTER TABLE problems ADD COLUMN ai_metadata JSON;
 ALTER TABLE problems ADD COLUMN tagged_at TIMESTAMP;
+ALTER TABLE competitions ADD COLUMN description TEXT;
 "
 ```
 
+If the database is empty it may be easier to delete `olympiad.db` and rerun the
+initialization script shown earlier; that will recreate every table with the
+current schema.
 **Or with Python:**
 ```python
 import asyncio
@@ -165,7 +175,7 @@ from backend.ai_tagging import AITaggerService
 
 async def create_problem(session, problem_data):
     # ... create problem ...
-    
+
     # Auto-tag the new problem
     service = AITaggerService()
     result = await service.tag_batch(session, problem_ids=[problem.id])

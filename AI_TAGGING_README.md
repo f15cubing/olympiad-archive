@@ -6,14 +6,14 @@ The AI Tagging system automatically classifies math olympiad problems using Goog
 
 ## Features
 
-✅ **Automated Classification** - Analyzes problems and solutions with AI  
-✅ **Confidence Scoring** - Includes confidence assessment (1-10) for each classification  
-✅ **Rate Limiting** - Respects API rate limits (1,500 req/day free tier)  
-✅ **Error Handling** - Robust retry logic and error recovery  
-✅ **Database Integration** - Stores metadata as JSON for flexibility  
-✅ **Validation** - Pydantic schema validation for all AI outputs  
-✅ **Batch Processing** - Efficient batch tagging with configurable batch sizes  
-✅ **Progress Tracking** - Real-time statistics and progress monitoring  
+✅ **Automated Classification** - Analyzes problems and solutions with AI
+✅ **Confidence Scoring** - Includes confidence assessment (1-10) for each classification
+✅ **Rate Limiting** - Respects API rate limits (1,500 req/day free tier)
+✅ **Error Handling** - Robust retry logic and error recovery
+✅ **Database Integration** - Stores metadata as JSON for flexibility
+✅ **Validation** - Pydantic schema validation for all AI outputs
+✅ **Batch Processing** - Efficient batch tagging with configurable batch sizes
+✅ **Progress Tracking** - Real-time statistics and progress monitoring
 
 ## Architecture
 
@@ -62,6 +62,16 @@ Updated Problem Database
 
 ### 2. Configure Environment
 
+Install `python-dotenv` if you haven't yet:
+
+```bash
+pip install python-dotenv
+```
+
+The system prefers the newer `google-genai` package for Gemini calls, but if
+it isn't installed the code will automatically fall back to the deprecated
+`google-generativeai` library. You can continue using either while upgrading.
+
 Create or update `.env` file in the project root:
 
 ```bash
@@ -69,7 +79,10 @@ Create or update `.env` file in the project root:
 GEMINI_API_KEY=your_api_key_here
 ```
 
-Or set as system environment variable:
+The Gemini client automatically calls `load_dotenv()` on import, so variables in
+`.env` become available at runtime.
+
+Or set as a system environment variable:
 
 ```bash
 # Linux/Mac
@@ -78,7 +91,6 @@ export GEMINI_API_KEY=your_api_key_here
 # Windows (PowerShell)
 $env:GEMINI_API_KEY="your_api_key_here"
 ```
-
 ### 3. Verify Setup
 
 ```bash
@@ -130,13 +142,13 @@ from backend.ai_tagging import AITaggerService
 async def tag_problems():
     async with AsyncSessionLocal() as session:
         service = AITaggerService()
-        
+
         # Tag all untagged problems
         result = await service.tag_all_untagged(session)
-        
+
         # Or tag specific problems
         result = await service.tag_batch(session, problem_ids=[1, 2, 3])
-        
+
         print(f"Success: {result.successful}/{result.total_processed}")
         return result
 
@@ -300,10 +312,10 @@ async def check_progress():
 
 ```sql
 -- SQLite/PostgreSQL
-SELECT id, metadata, difficulty, tagged_at 
-FROM problems 
-WHERE metadata IS NOT NULL 
-ORDER BY tagged_at DESC 
+SELECT id, ai_metadata, difficulty, tagged_at
+FROM problems
+WHERE ai_metadata IS NOT NULL
+ORDER BY tagged_at DESC
 LIMIT 10;
 ```
 
@@ -314,16 +326,16 @@ async def debug_problem(problem_id: int):
     async with AsyncSessionLocal() as session:
         from backend.ai_tagging.db_integration import get_problem_data
         from backend.ai_tagging import GeminiClient
-        
+
         data = await get_problem_data(session, problem_id)
         client = GeminiClient()
         result = await client.tag_problem(
             **data
         )
-        
+
         print(f"Success: {result.success}")
         print(f"Error: {result.error}")
-        print(f"Metadata: {result.metadata}")
+        print(f"AI Metadata: {result.ai_metadata}")
 ```
 
 ## Future Enhancements
@@ -341,7 +353,7 @@ async def debug_problem(problem_id: int):
 
 ### Issue: "GEMINI_API_KEY not provided or set in environment"
 
-**Solution**: 
+**Solution**:
 1. Get key from https://aistudio.google.com
 2. Set environment variable:
    ```bash
@@ -351,21 +363,21 @@ async def debug_problem(problem_id: int):
 
 ### Issue: Rate limit errors after 1,500+ requests
 
-**Solution**: 
+**Solution**:
 1. Wait 24 hours (daily limit resets)
 2. Or upgrade to paid API plan
 3. Reduce REQUESTS_PER_MINUTE in config.py
 
 ### Issue: Invalid JSON in response
 
-**Solution**: 
+**Solution**:
 1. Check problem statement for unusual formatting
 2. Try with --debug flag to see full response
 3. Report issue if problem statement is malformed
 
 ### Issue: Database locked error
 
-**Solution**: 
+**Solution**:
 1. Check if another script is running
 2. Close any open database connections
 3. Try again in a few seconds

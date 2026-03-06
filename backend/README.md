@@ -13,7 +13,7 @@ The backend provides a robust API for storing and retrieving olympiad problem da
 - **Database Driver**: aiosqlite (SQLite) / asyncpg (PostgreSQL)
 - **Validation**: Pydantic 2.12.5
 - **Testing**: pytest
-- **Additional**: python-dotenv, google-generativeai (AI integration)
+- **Additional**: python-dotenv, google-genai (AI integration; replaces deprecated google-generativeai)
 
 ## Project Structure
 
@@ -259,7 +259,7 @@ Key dependencies explained:
 - **pydantic**: Data validation using Python type hints
 - **python-dotenv**: Environment variable management
 - **pytest**: Testing framework
-- **google-generativeai**: (Optional) AI-powered solution generation
+- **google-genai**: (Optional) AI-powered solution generation (preferred)
 
 To update dependencies:
 ```bash

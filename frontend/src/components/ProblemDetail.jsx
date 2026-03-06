@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import axios from 'axios';
 import { InlineMath, BlockMath } from 'react-katex';
+import { tagSingleProblem } from '../services/taggingService';
 import 'katex/dist/katex.min.css';
 
 export default function ProblemDetail() {
@@ -18,7 +19,8 @@ export default function ProblemDetail() {
   });
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [submitting, setSubmitting] = useState(false);
-  const [aiLoading, setAiLoading] = useState(false);
+  const [taggingLoading, setTaggingLoading] = useState(false);
+  const [taggingError, setTaggingError] = useState(null);
 
   useEffect(() => {
     // Fetch problem and all available tags
@@ -95,28 +97,28 @@ export default function ProblemDetail() {
     }
   };
 
-  const handleAutoTag = async () => {
-    if (!window.confirm('Generate tags using AI? This may incur an API request.')) return;
-    setAiLoading(true);
-    try {
-      const res = await axios.post(`http://localhost:8000/problems/${id}/auto-tag`);
-      setProblem(res.data);
-      // sync selection state for editing form
-      setSelectedTagIds(res.data.tags?.map(t => t.id) || []);
-    } catch (err) {
-      console.error('AI tagging failed:', err);
-      alert('Auto-tagging failed');
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
   const handleTagToggle = (tagId) => {
     setSelectedTagIds(prev =>
       prev.includes(tagId)
         ? prev.filter(id => id !== tagId)
         : [...prev, tagId]
     );
+  };
+
+  const handleAutoTag = async () => {
+    setTaggingLoading(true);
+    setTaggingError(null);
+    try {
+      await tagSingleProblem(parseInt(id));
+      // Refresh the problem data to show updated metadata
+      const res = await axios.get(`http://localhost:8000/problems/${id}`);
+      setProblem(res.data);
+    } catch (err) {
+      console.error("Error tagging problem:", err);
+      setTaggingError(err.message || 'Failed to tag problem');
+    } finally {
+      setTaggingLoading(false);
+    }
   };
 
   const renderStatement = (text) => {
@@ -162,8 +164,50 @@ export default function ProblemDetail() {
           ))}
         </div>
 
+        {/* AI Metadata (Field, Techniques, Topics) */}
+        {problem.ai_metadata && (
+          <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
+            <h3 className="text-sm font-semibold text-purple-900 mb-3">✨ AI Classification</h3>
+            <div className="space-y-3">
+              <div>
+                <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Field</p>
+                <p className="text-sm text-purple-900 mt-1">{problem.ai_metadata.field}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Techniques</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {problem.ai_metadata.techniques?.map((tech, idx) => (
+                    <span key={idx} className="bg-purple-200 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Topics</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {problem.ai_metadata.topics?.map((topic, idx) => (
+                    <span key={idx} className="bg-indigo-200 text-indigo-800 text-xs font-medium px-2 py-1 rounded-full">
+                      {topic}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Tagging Error Message */}
+        {taggingError && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-700">
+              <span className="font-semibold">Error:</span> {taggingError}
+            </p>
+          </div>
+        )}
+
         {isAdmin && (
-          <div className="flex gap-4 mb-6 items-center">
+          <div className="flex gap-2 mb-6">
             <button
               onClick={() => {
                 setShowTagForm(true);
@@ -175,10 +219,10 @@ export default function ProblemDetail() {
             </button>
             <button
               onClick={handleAutoTag}
-              disabled={aiLoading}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+              disabled={taggingLoading}
+              className="bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
             >
-              {aiLoading ? 'Tagging...' : 'Auto‑tag'}
+              {taggingLoading ? '⏳ Tagging...' : '✨ Auto-tag'}
             </button>
           </div>
         )}

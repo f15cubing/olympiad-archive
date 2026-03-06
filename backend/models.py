@@ -14,6 +14,7 @@ class Competition(Base):
     __tablename__ = "competitions"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(Text, nullable=False) # e.g. 'IMO' [cite: 73]
+    description = Column(Text, nullable=True)  # optional long description supplied by frontend
     country = Column(Text)
     url = Column(Text)
     problems = relationship("Problem", back_populates="competition")
@@ -31,7 +32,7 @@ class Problem(Base):
     created_at = Column(TIMESTAMP, server_default=func.now())
     
     # AI-generated metadata (from Gemini)
-    metadata = Column(JSON, nullable=True)  # Stores complete AI response: {field, difficulty, techniques, topics, analysis, confidence_score}
+    ai_metadata = Column(JSON, nullable=True)  # Stores complete AI response: {field, difficulty, techniques, topics, analysis, confidence_score}
     tagged_at = Column(TIMESTAMP, nullable=True)  # Timestamp of when AI tagging was performed
 
     competition = relationship("Competition", back_populates="problems", lazy="selectin")
