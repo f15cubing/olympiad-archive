@@ -1,6 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from datetime import datetime
+from enum import Enum
 
 class TagBase(BaseModel):
     name: str
@@ -11,6 +12,24 @@ class TagCreate(TagBase):
 class TagResponse(TagBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
+
+class FieldEnum(str, Enum):
+    """Enum for problem field classifications."""
+    ALGEBRA = "Algebra"
+    GEOMETRY = "Geometry"
+    NUMBER_THEORY = "Number Theory"
+    COMBINATORICS = "Combinatorics"
+
+class AIMetadataResponse(BaseModel):
+    """Response model for AI-generated metadata (subset for frontend)."""
+    field: str  # "Algebra", "Geometry", "Number Theory", "Combinatorics"
+    techniques: List[str]  # e.g., ["induction", "pigeonhole"]
+    topics: List[str]  # e.g., ["sequences", "inequalities"]
+    tagged_at: Optional[datetime] = None  # When AI tagging was performed
+
+class TaggingBatchRequest(BaseModel):
+    """Request model for batch tagging endpoint."""
+    problem_ids: List[int]  # List of problem IDs to tag
 
 class ProblemBase(BaseModel):
     year: int
@@ -38,6 +57,7 @@ class ProblemResponse(ProblemBase):
     competition_id: Optional[int] = None
     created_at: Optional[datetime] = None
     tags: List[TagResponse] = []
+    ai_metadata: Optional[AIMetadataResponse] = None  # AI-generated metadata if available
     model_config = ConfigDict(from_attributes=True)
 
 class CompetitionBase(BaseModel):

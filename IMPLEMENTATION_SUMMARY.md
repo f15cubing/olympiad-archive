@@ -98,7 +98,7 @@ async def tag_all(session = Depends(get_db)):
 - [ ] Get Gemini API key from https://aistudio.google.com
 - [ ] Create `.env` file with `GEMINI_API_KEY=your_key_here`
 - [ ] Run `python test_ai_setup.py` to verify setup
-- [ ] Run database migration: `ALTER TABLE problems ADD COLUMN metadata JSON, tagged_at TIMESTAMP;`
+- [ ] Run database migration: `ALTER TABLE problems ADD COLUMN ai_metadata JSON, tagged_at TIMESTAMP;` (also add `description` column to competitions or recreate DB)
 - [ ] Run `python tag_problems.py` to start tagging
 
 ---
@@ -299,7 +299,7 @@ python
 >>> async def check():
 ...     async with AsyncSessionLocal() as s:
 ...         p = await s.get(Problem, 1)
-...         return p.metadata
+...         return p.ai_metadata
 >>> import asyncio
 >>> asyncio.run(check())
 {'analysis': '...', 'field': 'Algebra', 'difficulty': 5, ...}

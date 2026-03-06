@@ -152,7 +152,7 @@ backend/
 - **aiosqlite/asyncpg**: Async DB drivers
 - **pydantic**: Data validation
 - **python-dotenv**: Environment configuration
-- **google-generativeai**: AI integration (optional)
+- **google-genai**: AI integration (optional, replaces deprecated google-generativeai; dotenv support added)
 - **pytest**: Testing framework
 
 ### Testing

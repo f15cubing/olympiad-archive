@@ -40,10 +40,18 @@ export default function ProblemList() {
 
   const handleAddProblem = async (e) => {
     e.preventDefault();
+
+    // Validate problem_number
+    const probNum = parseInt(formData.problem_number);
+    if (!formData.problem_number || isNaN(probNum) || probNum <= 0) {
+      alert('Please enter a valid problem number (must be >= 1)');
+      return;
+    }
+
     setSubmitting(true);
     try {
       const payload = {
-        problem_number: parseInt(formData.problem_number),
+        problem_number: probNum,
         year: parseInt(formData.year),
         statement: formData.statement,
         author: formData.author || null,
@@ -255,7 +263,10 @@ export default function ProblemList() {
             <Link to={`/problem/${p.id}`} className="block group">
               <div className="flex justify-between text-sm font-medium text-blue-600 mb-2">
                 <span>Problem {p.problem_number}</span>
-                <span className="text-slate-400">{p.year}</span>
+                <div className="flex gap-2 items-center">
+                  {p.ai_metadata && <span className="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-1 rounded-full">✨ AI-Tagged</span>}
+                  <span className="text-slate-400">{p.year}</span>
+                </div>
               </div>
               {p.author && <p className="text-xs text-slate-500 mb-2">Author: {p.author}</p>}
               <div className="text-slate-700 leading-relaxed group-hover:text-blue-600">

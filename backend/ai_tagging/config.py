@@ -5,7 +5,7 @@ from typing import Literal
 
 # Gemini API Configuration
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-GEMINI_MODEL = "gemini-2.0-flash"
+GEMINI_MODEL = "gemini-2.5-flash"
 
 # Rate limiting
 REQUESTS_PER_MINUTE = 25  # Conservative limit to stay under 1,500 req/day
@@ -80,5 +80,5 @@ CONFIDENCE_MIN = 1
 CONFIDENCE_MAX = 10
 
 # Database settings
-TAG_COLUMN_NAME = "metadata"  # JSON column to store AI-generated metadata
+TAG_COLUMN_NAME = "ai_metadata"  # JSON column to store AI-generated metadata
 TAGGED_AT_COLUMN_NAME = "tagged_at"  # Timestamp of when tagging occurred
