@@ -80,14 +80,24 @@ class ClaudeTaggerService:
 
     async def tag_all_untagged(self, session: AsyncSession) -> TaggingBatchResult:
         all_results = []
+        consecutive_all_failed = 0
         while True:
             batch = await self.tag_batch(session, limit=BATCH_SIZE)
             all_results.extend(batch.results)
             if batch.total_processed == 0:
                 break
             if batch.successful == 0 and batch.failed > 0:
+                # Failed problems stay untagged and get re-fetched — abort after 3
+                # consecutive all-failed batches so a persistent error can't spin forever.
+                consecutive_all_failed += 1
+                if consecutive_all_failed >= 3:
+                    logger.error("3 consecutive all-failed Claude batches; aborting "
+                                 "(likely auth failure or gateway issue).")
+                    break
                 logger.warning("Claude batch had only failures. Pausing before next batch...")
                 await asyncio.sleep(5)
+            else:
+                consecutive_all_failed = 0
         successful = sum(1 for r in all_results if r.success)
         return TaggingBatchResult(
             total_processed=len(all_results), successful=successful,
