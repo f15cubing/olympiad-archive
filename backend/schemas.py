@@ -57,7 +57,8 @@ class ProblemResponse(ProblemBase):
     competition_id: Optional[int] = None
     created_at: Optional[datetime] = None
     tags: List[TagResponse] = []
-    ai_metadata: Optional[AIMetadataResponse] = None  # AI-generated metadata if available
+    ai_metadata: Optional[AIMetadataResponse] = None  # Gemini-generated metadata if available
+    claude_metadata: Optional[AIMetadataResponse] = None  # Claude-generated metadata if available
     model_config = ConfigDict(from_attributes=True)
 
 class CompetitionBase(BaseModel):

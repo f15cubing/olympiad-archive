@@ -5,6 +5,48 @@ import { InlineMath, BlockMath } from 'react-katex';
 import { tagSingleProblem } from '../services/taggingService';
 import 'katex/dist/katex.min.css';
 
+// Full class strings per tone (kept literal so Tailwind's scanner emits them).
+const TONES = {
+  purple: { box: 'from-purple-50 to-indigo-50 border-purple-200', head: 'text-purple-900',
+    label: 'text-purple-700', val: 'text-purple-900', tech: 'bg-purple-200 text-purple-800',
+    topic: 'bg-indigo-200 text-indigo-800' },
+  amber: { box: 'from-amber-50 to-orange-50 border-amber-200', head: 'text-amber-900',
+    label: 'text-amber-700', val: 'text-amber-900', tech: 'bg-amber-200 text-amber-900',
+    topic: 'bg-orange-200 text-orange-900' },
+};
+
+function ClassificationPanel({ title, meta, tone = 'purple' }) {
+  if (!meta) return null;
+  const t = TONES[tone];
+  return (
+    <div className={`mb-6 p-4 bg-gradient-to-r ${t.box} border rounded-lg`}>
+      <h3 className={`text-sm font-semibold ${t.head} mb-3`}>{title}</h3>
+      <div className="space-y-3">
+        <div>
+          <p className={`text-xs font-medium ${t.label} uppercase tracking-wide`}>Field</p>
+          <p className={`text-sm ${t.val} mt-1`}>{meta.field}</p>
+        </div>
+        <div>
+          <p className={`text-xs font-medium ${t.label} uppercase tracking-wide`}>Techniques</p>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {meta.techniques?.map((tech, idx) => (
+              <span key={idx} className={`${t.tech} text-xs font-medium px-2 py-1 rounded-full`}>{tech}</span>
+            ))}
+          </div>
+        </div>
+        <div>
+          <p className={`text-xs font-medium ${t.label} uppercase tracking-wide`}>Topics</p>
+          <div className="flex flex-wrap gap-2 mt-1">
+            {meta.topics?.map((topic, idx) => (
+              <span key={idx} className={`${t.topic} text-xs font-medium px-2 py-1 rounded-full`}>{topic}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ProblemDetail() {
   const isAdmin = true; // TODO: Replace with real auth system later
 
@@ -164,38 +206,9 @@ export default function ProblemDetail() {
           ))}
         </div>
 
-        {/* AI Metadata (Field, Techniques, Topics) */}
-        {problem.ai_metadata && (
-          <div className="mb-6 p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-lg">
-            <h3 className="text-sm font-semibold text-purple-900 mb-3">✨ AI Classification</h3>
-            <div className="space-y-3">
-              <div>
-                <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Field</p>
-                <p className="text-sm text-purple-900 mt-1">{problem.ai_metadata.field}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Techniques</p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {problem.ai_metadata.techniques?.map((tech, idx) => (
-                    <span key={idx} className="bg-purple-200 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">
-                      {tech}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-purple-700 uppercase tracking-wide">Topics</p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {problem.ai_metadata.topics?.map((topic, idx) => (
-                    <span key={idx} className="bg-indigo-200 text-indigo-800 text-xs font-medium px-2 py-1 rounded-full">
-                      {topic}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* AI classifications — Gemini and Claude side by side */}
+        <ClassificationPanel title="✨ Gemini Classification" meta={problem.ai_metadata} tone="purple" />
+        <ClassificationPanel title="🤖 Claude Classification" meta={problem.claude_metadata} tone="amber" />
 
         {/* Tagging Error Message */}
         {taggingError && (
