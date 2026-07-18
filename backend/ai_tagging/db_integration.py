@@ -13,6 +13,7 @@ except ModuleNotFoundError:
     from models import Problem, Tag, problem_tags
 
 from .schemas import AITagMetadata
+from .tag_vocab import normalize_tag
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +58,10 @@ async def save_tagging_result(
 
     problem.ai_metadata = metadata_dict
     problem.tagged_at = datetime.utcnow()
-    problem.difficulty = metadata.difficulty  # Update difficulty from AI
+    # Difficulty precedence: a curated (human) difficulty always wins. The AI value
+    # is preserved inside ai_metadata; we only fill problem.difficulty when it's unset.
+    if problem.difficulty is None:
+        problem.difficulty = metadata.difficulty
 
     # Create or link tags
     if create_tags:
@@ -83,9 +87,11 @@ async def save_tagging_result(
 
 
 async def _get_or_create_tag(session: AsyncSession, tag_name: str) -> Tag:
-    """Get or create a tag by name."""
-    # Check if tag exists
-    query = select(Tag).where(Tag.name == tag_name)
+    """Get or create a tag, matching on its normalized (canonical) name."""
+    canonical = normalize_tag(tag_name)
+
+    # Check if tag exists (by canonical name)
+    query = select(Tag).where(Tag.name == canonical)
     result = await session.execute(query)
     existing_tag = result.scalars().first()
 
@@ -93,10 +99,10 @@ async def _get_or_create_tag(session: AsyncSession, tag_name: str) -> Tag:
         return existing_tag
 
     # Create new tag
-    new_tag = Tag(name=tag_name)
+    new_tag = Tag(name=canonical)
     session.add(new_tag)
     await session.flush()  # Ensure the tag is inserted
-    logger.debug(f"Created new tag: {tag_name}")
+    logger.debug(f"Created new tag: {canonical}")
     return new_tag
 
 

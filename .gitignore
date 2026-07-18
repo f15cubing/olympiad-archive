@@ -21,3 +21,6 @@ dist/
 
 # OS
 .DS_Store
+
+# Node deps for import-pipeline helpers
+scripts/node_modules/

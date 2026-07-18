@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, ForeignKey, TIMESTAMP, func, Table, JSON
+from sqlalchemy import Column, Integer, Text, ForeignKey, TIMESTAMP, func, Table, JSON, UniqueConstraint
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
@@ -21,6 +21,11 @@ class Competition(Base):
 
 class Problem(Base):
     __tablename__ = "problems"
+    __table_args__ = (
+        # One row per contest problem; the importer upserts on this key.
+        UniqueConstraint("competition_id", "year", "problem_number",
+                         name="uq_problem_comp_year_number"),
+    )
     id = Column(Integer, primary_key=True, index=True)
     competition_id = Column(Integer, ForeignKey("competitions.id"))
     year = Column(Integer, nullable=False)

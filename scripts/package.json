@@ -1,0 +1,10 @@
+{
+  "name": "olympiad-archive-scripts",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node helpers for the import pipeline (KaTeX validation).",
+  "type": "module",
+  "dependencies": {
+    "katex": "^0.16.9"
+  }
+}

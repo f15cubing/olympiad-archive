@@ -1,0 +1,70 @@
+# IMO 2024 (Bath, United Kingdom). Problem statements are published facts.
+# Per the archive licensing policy, solutions are link-outs (source_url), not copied.
+# Difficulties are curated by contest position convention (P1/P4 easy, P2/P5 medium,
+# P3/P6 hard) and take precedence over any later AI estimate.
+competition:
+  name: IMO
+  country: International
+  url: https://www.imo-official.org
+year: 2024
+problems:
+  - number: 1
+    difficulty: 4
+    source_url: https://artofproblemsolving.com/wiki/index.php/2024_IMO_Problems/Problem_1
+    statement: |
+      Determine all real numbers $\alpha$ such that, for every positive integer $n$, the integer $\lfloor \alpha \rfloor + \lfloor 2\alpha \rfloor + \cdots + \lfloor n\alpha \rfloor$ is a multiple of $n$. (Here, $\lfloor z \rfloor$ denotes the greatest integer less than or equal to $z$.)
+
+  - number: 2
+    difficulty: 6
+    source_url: https://artofproblemsolving.com/wiki/index.php/2024_IMO_Problems/Problem_2
+    statement: |
+      Determine all pairs $(a, b)$ of positive integers for which there exist positive integers $g$ and $N$ such that $\gcd(a^n + b, b^n + a) = g$ holds for all integers $n \ge N$.
+
+  - number: 3
+    difficulty: 8
+    source_url: https://artofproblemsolving.com/wiki/index.php/2024_IMO_Problems/Problem_3
+    statement: |
+      Let $a_1, a_2, a_3, \ldots$ be an infinite sequence of positive integers, and let $N$ be a positive integer. Suppose that, for each $n > N$, $a_n$ is equal to the number of times $a_{n-1}$ appears in the list $a_1, a_2, \ldots, a_{n-1}$. Prove that at least one of the sequences $a_1, a_3, a_5, \ldots$ and $a_2, a_4, a_6, \ldots$ is eventually periodic.
+
+  - number: 4
+    difficulty: 5
+    source_url: https://artofproblemsolving.com/wiki/index.php/2024_IMO_Problems/Problem_4
+    statement: |
+      Let $ABC$ be a triangle with $AB < AC < BC$. Let the incentre and incircle of triangle $ABC$ be $I$ and $\omega$, respectively. Let $X$ be the point on line $BC$ different from $C$ such that the line through $X$ parallel to $AC$ is tangent to $\omega$. Similarly, let $Y$ be the point on line $BC$ different from $B$ such that the line through $Y$ parallel to $AB$ is tangent to $\omega$. Let $AI$ intersect the circumcircle of triangle $ABC$ again at $P \ne A$. Let $K$ and $L$ be the midpoints of $AC$ and $AB$, respectively. Prove that $\angle KIL + \angle YPX = 180^\circ$.
+
+  - number: 5
+    difficulty: 7
+    source_url: https://artofproblemsolving.com/wiki/index.php/2024_IMO_Problems/Problem_5
+    statement: >
+      Turbo the snail plays a game on a board with 2024 rows and 2023 columns. There
+      are hidden monsters in 2022 of the cells. Initially, Turbo does not know where
+      any of the monsters are, but he knows that there is exactly one monster in each
+      row except the first row and the last row, and that each column contains at most
+      one monster.
+
+
+      Turbo makes a series of attempts to go from the first row to the last row. On
+      each attempt, he chooses to start on any cell in the first row, then repeatedly
+      moves to an adjacent cell sharing a common side. If he reaches a cell with a
+      monster, his attempt ends and he is transported back to the first row to start a
+      new attempt. The monsters do not move, and Turbo remembers whether or not each
+      cell he has visited contains a monster. If he reaches any cell in the last row,
+      his attempt ends and the game is over.
+
+
+      Determine the minimum value of $n$ for which Turbo has a strategy that guarantees
+      reaching the last row on the $n$-th attempt or earlier, regardless of the
+      locations of the monsters.
+
+  - number: 6
+    difficulty: 9
+    source_url: https://artofproblemsolving.com/wiki/index.php/2024_IMO_Problems/Problem_6
+    statement: >
+      Let $\mathbb{Q}$ be the set of rational numbers. A function $f \colon \mathbb{Q} \to \mathbb{Q}$
+      is called aquaesulian if the following property holds: for every $x, y \in \mathbb{Q}$,
+      $f(x + f(y)) = f(x) + y$ or $f(f(x) + y) = x + f(y)$.
+
+
+      Show that there exists an integer $c$ such that for any aquaesulian function $f$
+      there are at most $c$ different rational numbers of the form $f(r) + f(-r)$ for
+      some rational number $r$, and find the smallest possible value of $c$.

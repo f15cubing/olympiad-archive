@@ -1,6 +1,6 @@
 import pytest
 
-from backend.ai_tagging.gemini_client import GeminiClient
+from ai_tagging.gemini_client import GeminiClient
 
 
 def test_gemini_client_requires_key(monkeypatch):
