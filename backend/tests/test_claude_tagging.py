@@ -10,7 +10,7 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "backend"))
 
-from ai_tagging.claude_client import ClaudeClient, ClaudeCastError  # noqa: E402
+from ai_tagging.claude_client import ClaudeClient, ClaudeCastError, _parse_custom_headers  # noqa: E402
 from ai_tagging.schemas import AITagMetadata  # noqa: E402
 from ai_tagging.db_integration import save_claude_tagging_result  # noqa: E402
 from models import Competition, Problem  # noqa: E402
@@ -57,6 +57,14 @@ def test_extract_json_text_fallback():
 def test_extract_raises_on_garbage():
     with pytest.raises(ClaudeCastError):
         ClaudeClient._extract_metadata(_resp([_text_block("no json here")]))
+
+
+# ------------------------------------------------------------- custom header parsing
+def test_parse_custom_headers():
+    assert _parse_custom_headers("x-tfy-api-key: abc123") == {"x-tfy-api-key": "abc123"}
+    assert _parse_custom_headers("A: 1\nB: 2") == {"A": "1", "B": "2"}
+    assert _parse_custom_headers("") == {}
+    assert _parse_custom_headers(None) == {}
 
 
 # --------------------------------------------------------------------- tag_problem

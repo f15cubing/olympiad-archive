@@ -15,6 +15,7 @@ import asyncio
 import json
 import logging
 import os
+import re
 from datetime import datetime
 from typing import Optional
 
@@ -61,6 +62,17 @@ TAG_TOOL = {
 }
 
 
+def _parse_custom_headers(raw: Optional[str]) -> dict:
+    """Parse newline/comma-separated 'Name: Value' pairs into a header dict."""
+    headers = {}
+    for line in re.split(r"[\r\n,]", raw or ""):
+        if ":" in line:
+            name, value = line.split(":", 1)
+            if name.strip():
+                headers[name.strip()] = value.strip()
+    return headers
+
+
 class ClaudeCastError(Exception):
     """Raised when the Claude response can't be parsed into AITagMetadata."""
 
@@ -79,7 +91,12 @@ class ClaudeClient:
             raise ValueError("ANTHROPIC_AUTH_TOKEN not provided or set in environment")
         self.base_url = base_url or ANTHROPIC_BASE_URL
         self.model = model or CLAUDE_MODEL
-        self.client = AsyncAnthropic(auth_token=self.auth_token, base_url=self.base_url)
+        # Forward ANTHROPIC_CUSTOM_HEADERS if set (e.g. the TrueFoundry gateway's
+        # x-tfy-api-key). Parsed as newline/comma-separated "Name: Value"; no-op if unset.
+        self.client = AsyncAnthropic(
+            auth_token=self.auth_token, base_url=self.base_url,
+            default_headers=_parse_custom_headers(os.getenv("ANTHROPIC_CUSTOM_HEADERS")) or None,
+        )
         self.rate_limiter = RateLimiter(CLAUDE_REQUESTS_PER_MINUTE)
         logger.info(f"Initialized ClaudeClient (model={self.model}, base_url={self.base_url})")
 
