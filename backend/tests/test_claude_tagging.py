@@ -48,6 +48,22 @@ def test_extract_from_tool_use():
     assert md.techniques == ["induction"]  # schema lowercases
 
 
+def test_extract_coerces_comma_strings():
+    # Some responses emit techniques/topics as a comma string instead of a list.
+    data = dict(VALID, techniques="induction, construction",
+                topics="sequences, inequalities, primes")
+    md = ClaudeClient._extract_metadata(_resp([_tool_block(data)]))
+    assert md.techniques == ["induction", "construction"]
+    assert md.topics == ["sequences", "inequalities", "primes"]
+
+
+def test_extract_clamps_overlong_lists():
+    data = dict(VALID, techniques=[f"t{i}" for i in range(15)],
+                topics=[f"topic{i}" for i in range(12)])
+    md = ClaudeClient._extract_metadata(_resp([_tool_block(data)]))
+    assert len(md.techniques) == 10 and len(md.topics) == 7
+
+
 def test_extract_json_text_fallback():
     import json
     md = ClaudeClient._extract_metadata(_resp([_text_block("noise " + json.dumps(VALID) + " end")]))

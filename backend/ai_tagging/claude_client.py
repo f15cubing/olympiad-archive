@@ -52,8 +52,10 @@ TAG_TOOL = {
                       "enum": ["Algebra", "Geometry", "Number Theory", "Combinatorics"]},
             "difficulty": {"type": "integer", "minimum": 1, "maximum": 10},
             "techniques": {"type": "array", "items": {"type": "string"},
+                           "minItems": 1, "maxItems": 10,
                            "description": "1-10 specific techniques used."},
             "topics": {"type": "array", "items": {"type": "string"},
+                       "minItems": 2, "maxItems": 7,
                        "description": "2-7 specific topic keywords."},
             "confidence_score": {"type": "integer", "minimum": 1, "maximum": 10},
         },
@@ -182,6 +184,20 @@ class ClaudeClient:
                 data = json.loads(text[start:end])
             except json.JSONDecodeError as e:
                 raise ClaudeCastError(f"invalid JSON in response: {e}")
+        # Coerce + clamp common malformations so a near-miss response still validates:
+        # models sometimes emit techniques/topics as a comma string instead of a list,
+        # or over-generate past the schema bounds, or exceed the analysis length.
+        if isinstance(data, dict):
+            for key in ("techniques", "topics"):
+                v = data.get(key)
+                if isinstance(v, str):
+                    data[key] = [t.strip() for t in re.split(r"[;,]", v) if t.strip()]
+            if isinstance(data.get("techniques"), list):
+                data["techniques"] = data["techniques"][:10]
+            if isinstance(data.get("topics"), list):
+                data["topics"] = data["topics"][:7]
+            if isinstance(data.get("analysis"), str) and len(data["analysis"]) > 500:
+                data["analysis"] = data["analysis"][:500]
         try:
             return AITagMetadata(**data)
         except Exception as e:
