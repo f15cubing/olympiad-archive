@@ -3,6 +3,7 @@
 import json
 import logging
 import asyncio
+import os
 from typing import Optional
 from datetime import datetime, timedelta
 import re
@@ -46,7 +47,9 @@ class GeminiClient:
 
     def __init__(self, api_key: Optional[str] = None):
         """Initialize Gemini client with API key."""
-        self.api_key = api_key or GEMINI_API_KEY
+        # Re-read the env at construction time so a key set after import is honored
+        # (GEMINI_API_KEY in config is captured once at module load).
+        self.api_key = api_key or GEMINI_API_KEY or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not provided or set in environment")
 
