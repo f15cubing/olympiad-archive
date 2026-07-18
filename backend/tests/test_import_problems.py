@@ -5,6 +5,7 @@ as a subprocess against a throwaway SQLite DB so it exercises the real code path
 (migrations-equivalent schema + ORM upsert + KaTeX gate) without import-identity games.
 """
 
+import json
 import os
 import subprocess
 import sys
@@ -109,15 +110,19 @@ def _make_schema_db(db_path: Path):
     asyncio.run(go())
 
 
-def _run_importer(cwd: Path, *args: str):
+def _run_script(script: str, cwd: Path, *args: str):
     env = dict(os.environ, PYTHONPATH=str(REPO_ROOT))
     return subprocess.run(
-        [sys.executable, str(SCRIPTS / "import_problems.py"), *args],
+        [sys.executable, str(SCRIPTS / script), *args],
         cwd=str(cwd),
         env=env,
         capture_output=True,
         text=True,
     )
+
+
+def _run_importer(cwd: Path, *args: str):
+    return _run_script("import_problems.py", cwd, *args)
 
 
 def test_import_is_idempotent(tmp_path):
@@ -169,4 +174,56 @@ def test_dry_run_writes_nothing(tmp_path):
 
     con = sqlite3.connect(tmp_path / "olympiad.db")
     assert con.execute("SELECT count(*) FROM problems").fetchone()[0] == 0
+    con.close()
+
+
+# ------------------------------------------------------------- coverage_report.py
+def test_coverage_report_json(tmp_path):
+    _make_schema_db(tmp_path / "olympiad.db")
+    yaml_file = tmp_path / "2024.yaml"
+    yaml_file.write_text(
+        "competition:\n  name: IMO\nyear: 2024\nproblems:\n"
+        "  - number: 1\n    difficulty: 4\n    statement: 'Let $a$.'\n"
+        "  - number: 2\n    statement: 'Find $x$.'\n",  # no difficulty -> flagged
+        encoding="utf-8",
+    )
+    assert _run_importer(tmp_path, str(yaml_file), "--no-katex").returncode == 0
+
+    res = _run_script("coverage_report.py", tmp_path, "--json")
+    assert res.returncode == 0, res.stderr
+    report = json.loads(res.stdout)
+    assert report["totals"]["problems"] == 2
+    assert report["totals"]["competitions"] == 1
+    assert report["per_competition_year"]["IMO"] == {"2024": 2}
+    assert report["flags"]["missing_difficulty"] == 1
+    assert report["tagging"]["gemini_tagged"] == 0
+
+
+# --------------------------------------------------------- merge_duplicate_tags.py
+def test_merge_duplicate_tags(tmp_path):
+    import sqlite3
+
+    _make_schema_db(tmp_path / "olympiad.db")
+    con = sqlite3.connect(tmp_path / "olympiad.db")
+    con.execute("INSERT INTO competitions (id, name) VALUES (1, 'IMO')")
+    con.execute(
+        "INSERT INTO problems (id, competition_id, year, problem_number, statement) "
+        "VALUES (1, 1, 2024, 1, 'x')"
+    )
+    # two names that collapse to the canonical 'Number Theory', both linked to problem 1
+    con.execute("INSERT INTO tags (id, name) VALUES (1, 'Number theory'), (2, 'NT')")
+    con.execute("INSERT INTO problem_tags (problem_id, tag_id) VALUES (1, 1), (1, 2)")
+    con.commit()
+    con.close()
+
+    res = _run_script("merge_duplicate_tags.py", tmp_path)
+    assert res.returncode == 0, res.stderr
+
+    con = sqlite3.connect(tmp_path / "olympiad.db")
+    names = {r[0] for r in con.execute("SELECT name FROM tags")}
+    assert names == {"Number Theory"}
+    # problem 1 ends up linked exactly once (redundant link dropped, not duplicated)
+    assert con.execute(
+        "SELECT count(*) FROM problem_tags WHERE problem_id = 1"
+    ).fetchone()[0] == 1
     con.close()

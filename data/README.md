@@ -56,3 +56,25 @@ AI-generated alternate solutions are stored labeled `author: "AI (Claude)"`.
 4. Tag (Gemini): `python tag_problems.py`
 
 Re-running the importer is safe — it upserts on `(competition, year, problem_number)`.
+
+## Two ways to produce a YAML file
+
+1. **Hand-authored** (highest quality, slowest) — e.g. `data/imo/2024.yaml`. Best for a
+   flagship curated core.
+2. **Dataset adapters** (`scripts/adapters/`) — map a public dataset to canonical YAML.
+   Each adapter validates its output against the importer schema and KaTeX-checks it, so it
+   can't emit anything the importer would reject. Example:
+
+   ```
+   # lmms-lab/imo-2025 (MIT) -> data/imo/2025.yaml
+   python scripts/adapters/imo_json.py path/to/imo_2025.json --out data
+   ```
+
+   `data/imo/2025.yaml` was produced this way (see its header comment). **License-check every
+   source before importing it**, and record a `source_url`.
+
+## Coverage / QC
+
+`python scripts/coverage_report.py` (add `--json` for machine output) shows problems per
+competition/year, % with a solution, % tagged, missing difficulties, and residual
+near-duplicate tags. Run it after importing/tagging to catch taxonomy bloat and gaps.
