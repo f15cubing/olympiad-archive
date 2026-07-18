@@ -7,6 +7,14 @@ from typing import Literal
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_MODEL = "gemini-2.5-flash"
 
+# Claude API Configuration (parallel provider — Phase D).
+# Routed through the TrueFoundry gateway by default; both are overridable via env.
+# Auth uses the Anthropic SDK's ANTHROPIC_AUTH_TOKEN (Bearer), not ANTHROPIC_API_KEY.
+ANTHROPIC_BASE_URL = os.getenv("ANTHROPIC_BASE_URL", "https://tfy.promptlens.trilogy.com")
+ANTHROPIC_AUTH_TOKEN = os.getenv("ANTHROPIC_AUTH_TOKEN")
+CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-8")
+CLAUDE_REQUESTS_PER_MINUTE = int(os.getenv("CLAUDE_REQUESTS_PER_MINUTE", "20"))
+
 # Rate limiting
 REQUESTS_PER_MINUTE = 25  # Conservative limit to stay under 1,500 req/day
 BATCH_SIZE = 10  # Process problems in batches

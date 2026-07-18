@@ -40,6 +40,11 @@ class Problem(Base):
     ai_metadata = Column(JSON, nullable=True)  # Stores complete AI response: {field, difficulty, techniques, topics, analysis, confidence_score}
     tagged_at = Column(TIMESTAMP, nullable=True)  # Timestamp of when AI tagging was performed
 
+    # Parallel Claude tagging (stored separately so Gemini's ai_metadata is never touched;
+    # the two can be compared per problem to decide a routing policy). Same AITagMetadata shape.
+    claude_metadata = Column(JSON, nullable=True)
+    claude_tagged_at = Column(TIMESTAMP, nullable=True)
+
     competition = relationship("Competition", back_populates="problems", lazy="selectin")
     solutions = relationship("Solution", back_populates="problem", cascade="all, delete", lazy="selectin")
     tags = relationship("Tag", secondary=problem_tags, back_populates="problems", lazy="selectin")
