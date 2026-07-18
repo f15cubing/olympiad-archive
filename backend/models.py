@@ -45,6 +45,12 @@ class Problem(Base):
     claude_metadata = Column(JSON, nullable=True)
     claude_tagged_at = Column(TIMESTAMP, nullable=True)
 
+    # Semantic-search embedding of the statement (Phase C). Vector stored as a JSON list of
+    # floats; numpy-cosine ranking is fine at a few-thousand rows.
+    embedding = Column(JSON, nullable=True)
+    embedding_model = Column(Text, nullable=True)
+    embedded_at = Column(TIMESTAMP, nullable=True)
+
     competition = relationship("Competition", back_populates="problems", lazy="selectin")
     solutions = relationship("Solution", back_populates="problem", cascade="all, delete", lazy="selectin")
     tags = relationship("Tag", secondary=problem_tags, back_populates="problems", lazy="selectin")

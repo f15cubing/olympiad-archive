@@ -43,13 +43,13 @@ export default function Search() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Keyword Search
+              Semantic Search
             </label>
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              placeholder="Search in problem statements..."
+              placeholder="Describe a problem or concept (e.g. 'functional equation over the rationals')..."
               className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>

@@ -15,6 +15,10 @@ ANTHROPIC_AUTH_TOKEN = os.getenv("ANTHROPIC_AUTH_TOKEN")
 CLAUDE_MODEL = os.getenv("CLAUDE_MODEL", "claude-opus-4-8")
 CLAUDE_REQUESTS_PER_MINUTE = int(os.getenv("CLAUDE_REQUESTS_PER_MINUTE", "20"))
 
+# Embeddings for semantic search (Phase C). Gemini's embedding quota is separate from
+# generateContent, so this works on the free lane even when chat tagging is capped.
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
+
 # Rate limiting
 REQUESTS_PER_MINUTE = 25  # Conservative limit to stay under 1,500 req/day
 BATCH_SIZE = 10  # Process problems in batches

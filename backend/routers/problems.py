@@ -1,3 +1,5 @@
+import asyncio
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
@@ -6,6 +8,7 @@ from typing import List
 import models, schemas
 from database import get_db
 
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/problems", tags=["problems"])
 
 @router.get("/", response_model=List[schemas.ProblemResponse])
@@ -22,14 +25,38 @@ async def get_problems(db: AsyncSession = Depends(get_db)):
 async def search_problems(
     q: str = None,
     tag: str = None,
+    limit: int = 25,
+    semantic: bool = True,
     db: AsyncSession = Depends(get_db)
 ):
-    query = select(models.Problem).options(selectinload(models.Problem.tags))
-    if q:
-        query = query.where(models.Problem.statement.ilike(f"%{q}%"))
+    """Search problems. With a query and stored embeddings, ranks by semantic similarity
+    (Phase C); otherwise (or on any embedding error) falls back to a keyword match."""
+    base = select(models.Problem).options(selectinload(models.Problem.tags))
     if tag:
-        query = query.join(models.Problem.tags).where(models.Tag.name == tag)
-    result = await db.execute(query)
+        base = base.join(models.Problem.tags).where(models.Tag.name == tag)
+
+    if not q:
+        result = await db.execute(base)
+        return result.scalars().unique().all()
+
+    if semantic:
+        try:
+            import ai_tagging.embeddings as emb
+            candidates = (
+                await db.execute(base.where(models.Problem.embedding.isnot(None)))
+            ).scalars().unique().all()
+            if candidates:
+                qvec = await asyncio.get_event_loop().run_in_executor(None, emb.embed_query, q)
+                ranked = sorted(
+                    candidates,
+                    key=lambda p: emb.cosine_similarity(qvec, p.embedding),
+                    reverse=True,
+                )
+                return ranked[:limit]
+        except Exception as e:  # embeddings unavailable/errored -> keyword fallback
+            logger.warning(f"semantic search unavailable ({e}); falling back to keyword")
+
+    result = await db.execute(base.where(models.Problem.statement.ilike(f"%{q}%")))
     return result.scalars().unique().all()
 
 @router.get("/{problem_id}", response_model=schemas.ProblemWithSolutions)
