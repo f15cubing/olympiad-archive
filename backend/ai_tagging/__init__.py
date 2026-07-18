@@ -13,3 +13,12 @@ __all__ = [
     "ProblemWithSolution",
     "main",
 ]
+
+# Claude provider (Phase D) — imported lazily to avoid a hard dependency on `anthropic`
+# for the Gemini-only path.
+try:
+    from .claude_client import ClaudeClient
+    from .claude_tagger_service import ClaudeTaggerService
+    __all__ += ["ClaudeClient", "ClaudeTaggerService"]
+except ImportError:
+    pass

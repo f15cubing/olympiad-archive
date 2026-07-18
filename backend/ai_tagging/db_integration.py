@@ -32,6 +32,34 @@ async def get_problems_by_ids(session: AsyncSession, problem_ids: List[int]) -> 
     return result.scalars().all()
 
 
+async def get_claude_untagged_problems(session: AsyncSession, limit: int = 100) -> List[Problem]:
+    """Get problems that haven't been Claude-tagged yet (claude_metadata IS NULL)."""
+    query = select(Problem).where(Problem.claude_metadata.is_(None)).limit(limit)
+    result = await session.execute(query)
+    return result.scalars().all()
+
+
+async def save_claude_tagging_result(
+    session: AsyncSession,
+    problem_id: int,
+    metadata: AITagMetadata,
+) -> None:
+    """Save Claude tagging metadata to `claude_metadata` — non-destructive.
+
+    Deliberately does NOT touch problem.difficulty, ai_metadata, tags, or the Gemini
+    `tagged_at`: Claude runs as a parallel provider so the two can be compared per problem
+    before a routing policy is decided (Phase B). No Tag rows are created here.
+    """
+    problem = await session.get(Problem, problem_id)
+    if not problem:
+        logger.warning(f"Problem {problem_id} not found in database")
+        return
+    problem.claude_metadata = metadata.model_dump()
+    problem.claude_tagged_at = datetime.utcnow()
+    await session.commit()
+    logger.info(f"Saved Claude tagging result for problem {problem_id}")
+
+
 async def save_tagging_result(
     session: AsyncSession,
     problem_id: int,

@@ -143,6 +143,7 @@ class AITaggerService:
         """
         all_results = []
         batch_num = 0
+        consecutive_all_failed = 0
 
         while True:
             batch_num += 1
@@ -157,8 +158,18 @@ class AITaggerService:
                 break
 
             if batch_result.successful == 0 and batch_result.failed > 0:
-                logger.warning("Batch had failures. Pausing before next batch...")
+                # Every problem in the batch failed. They stay untagged, so the next
+                # loop re-fetches the same ones — without this guard a persistent error
+                # (quota exhausted, bad key) spins forever. Abort after 3 such batches.
+                consecutive_all_failed += 1
+                if consecutive_all_failed >= 3:
+                    logger.error("3 consecutive all-failed batches; aborting "
+                                 "(likely quota exhausted or auth failure).")
+                    break
+                logger.warning("Batch had only failures. Pausing before next batch...")
                 await asyncio.sleep(5)
+            else:
+                consecutive_all_failed = 0
 
         # Aggregate results
         successful = sum(1 for r in all_results if r.success)

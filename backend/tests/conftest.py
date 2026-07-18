@@ -15,10 +15,14 @@ def event_loop():
     yield loop
     loop.close()
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 async def async_engine():
-    # Using a shared memory database for the session
-    engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
+    # Fresh in-memory database per test so committed rows can't leak across tests.
+    # StaticPool keeps a single connection alive so the :memory: DB persists for the test.
+    from sqlalchemy.pool import StaticPool
+    engine = create_async_engine(
+        "sqlite+aiosqlite:///:memory:", echo=False, poolclass=StaticPool
+    )
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield engine
