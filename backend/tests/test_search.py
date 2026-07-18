@@ -54,3 +54,19 @@ async def test_search_no_query_returns_all(client, async_session):
     resp = await client.get("/problems/search")
     assert resp.status_code == 200
     assert len(resp.json()) == 2
+
+
+async def test_problem_response_exposes_claude_metadata(client, async_session):
+    comp = Competition(name="IMO")
+    async_session.add(comp)
+    await async_session.flush()
+    p = Problem(competition_id=comp.id, year=2024, problem_number=1, statement="x",
+                claude_metadata={"analysis": "reasoning here", "field": "Algebra",
+                                 "difficulty": 5, "techniques": ["induction"],
+                                 "topics": ["sequences", "inequalities"], "confidence_score": 7})
+    async_session.add(p)
+    await async_session.flush()
+    resp = await client.get(f"/problems/{p.id}")
+    assert resp.status_code == 200
+    cm = resp.json()["claude_metadata"]
+    assert cm["field"] == "Algebra" and cm["techniques"] == ["induction"]
